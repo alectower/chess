@@ -1,0 +1,64 @@
+/* This file is for your main application css. */
+
+.board .row {
+  display: -webkit-box;
+  display: -moz-box;
+  display: -ms-flexbox;
+  display: -webkit-flex;
+  display: flex;
+}
+
+.board .row .square {
+  height: 80px;
+  border: 1px solid #ddd;
+  -webkit-box-flex: 1;
+  -moz-box-flex: 1;
+  width: 12%;
+  -webkit-flex: 1;
+  -ms-flex: 1;
+  flex: 1;
+  display: -webkit-box;
+  display: -moz-box;
+  display: -ms-flexbox;
+  display: -webkit-flex;
+  display: flex;
+}
+
+.board .row .square {
+  border-right: none;
+  border-bottom: none;
+  align-items: center;
+  justify-content: center;
+}
+
+.board .row:nth-child(2n + 1) .square:nth-child(2n + 2) {
+  background: #ddd;
+}
+
+.board .row:nth-child(2n + 2) .square:nth-child(2n + 1) {
+  background: #ddd;
+}
+
+.board .row .square:last-child {
+  border-right: 1px solid #ddd;
+}
+
+.board .row:last-child .square {
+  border-bottom: 1px solid #ddd;
+}
+
+.board .row .square .piece {
+  font-size: 50px;
+  -webkit-touch-callout: none;
+    -webkit-user-select: none;
+     -khtml-user-select: none;
+       -moz-user-select: none;
+        -ms-user-select: none;
+            user-select: none;
+  -khtml-user-drag: element;
+  -webkit-user-drag: element;
+}
+
+.board .row .square .piece:hover {
+  cursor: pointer;
+}

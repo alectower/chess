@@ -1,0 +1,9 @@
+use Mix.Config
+
+config :chess, Chess.Repo,
+  adapter: Ecto.Adapters.Postgres,
+  username: "",
+  password: "",
+  database: "chess_#{Mix.env}",
+  hostname: "localhost",
+  pool_size: 10
