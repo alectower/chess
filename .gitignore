@@ -27,3 +27,5 @@ erl_crash.dump
 web/elm/elm-stuff/build-artifacts
 elm-stuff
 package-lock.json
+web/static/vendor/chess.js
+a.out

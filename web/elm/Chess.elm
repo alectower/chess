@@ -133,21 +133,15 @@ view model =
             List.sortBy Tuple.first (Dict.toList model.board)
                 |> Array.fromList
 
-        rows =
+        endRowNumbers =
             Array.initialize 8 (\n -> (n + 1) * 8)
                 |> Array.toList
+
+        rowSlice n =
+            Array.slice (n - 8) n boardPieces |> Array.toList
     in
         div [ class "board" ]
-            (List.map
-                placeRow
-                (List.map
-                    (\a ->
-                        (Array.slice (a - 8) a boardPieces)
-                            |> Array.toList
-                    )
-                    rows
-                )
-            )
+            (List.map rowSlice endRowNumbers |> List.map placeRow)
 
 
 pieceDisplay teampiece =
