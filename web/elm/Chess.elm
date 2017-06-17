@@ -77,61 +77,52 @@ type Msg
     | DropOn String
 
 
+updateModel : List ( String, TeamPiece ) -> Model -> Model
+updateModel pieces model =
+    List.foldl
+        (\a b ->
+            { b
+                | board =
+                    b.board
+                        |> Dict.insert (Tuple.first a) (Tuple.second a)
+            }
+        )
+        model
+        pieces
+
+
+movePiece : String -> TeamPiece -> Model -> Model
 movePiece position currentPiece model =
-    case ( currentPiece, model.movingPiece, model.movingFrom ) of
-        ( Just Empty, Just newPiece, Just oldPosition ) ->
-            let
-                canMove =
-                    Board.canMoveTo
-                        newPiece
-                        (convertPosition oldPosition)
-                        Empty
-                        (convertPosition position)
-            in
-                if canMove then
-                    { model
-                        | board =
-                            model.board
-                                |> (Dict.insert position newPiece)
-                                |> (Dict.insert oldPosition Empty)
-                        , movingPiece = Nothing
-                        , movingFrom = Nothing
-                    }
-                else
-                    { model
-                        | movingPiece = Nothing
-                        , movingFrom = Nothing
-                    }
-
-        ( Just currentPiece, Just newPiece, Just oldPosition ) ->
-            let
-                canMove =
-                    Board.canMoveTo
-                        newPiece
-                        (convertPosition oldPosition)
-                        currentPiece
-                        (convertPosition position)
-            in
-                if canMove then
-                    { model
-                        | board =
-                            model.board
-                                |> (Dict.insert position newPiece)
-                                |> (Dict.insert oldPosition Empty)
-                        , movingPiece = Nothing
-                        , movingFrom = Nothing
-                    }
-                else
-                    { model
-                        | movingPiece = Nothing
-                        , movingFrom = Nothing
-                    }
-
-        _ ->
+    let
+        sameBoard =
             { model
                 | movingPiece = Nothing
                 , movingFrom = Nothing
             }
+    in
+        case ( currentPiece, model.movingPiece, model.movingFrom ) of
+            ( Empty, Just newPiece, Just oldPosition ) ->
+                let
+                    canMove =
+                        Board.canMoveTo newPiece (convertPosition oldPosition) Empty (convertPosition position)
+                in
+                    if canMove then
+                        updateModel [ ( position, newPiece ), ( oldPosition, Empty ) ] model
+                    else
+                        sameBoard
+
+            ( currentPiece, Just newPiece, Just oldPosition ) ->
+                let
+                    canMove =
+                        Board.canMoveTo newPiece (convertPosition oldPosition) currentPiece (convertPosition position)
+                in
+                    if canMove then
+                        updateModel [ ( position, newPiece ), ( oldPosition, Empty ) ] model
+                    else
+                        sameBoard
+
+            _ ->
+                sameBoard
 
 
 update : Msg -> Model -> Model
@@ -151,7 +142,12 @@ update msg model =
                 currentPiece =
                     Dict.get position model.board
             in
-                movePiece position currentPiece model
+                case currentPiece of
+                    Just piece ->
+                        movePiece position piece model
+
+                    Nothing ->
+                        movePiece position Empty model
 
 
 

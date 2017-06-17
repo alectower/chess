@@ -166,8 +166,9 @@ canMoveTo movingPiece from currentPiece to =
 
             TeamPiece _ Queen ->
                 if
-                    (rowDelta == colDelta && from /= to)
+                    ((rowDelta == colDelta && from /= to)
                         || (rowDelta == 0 || colDelta == 0)
+                    )
                         && onOppositeTeams
                 then
                     True
@@ -182,8 +183,9 @@ canMoveTo movingPiece from currentPiece to =
 
             TeamPiece _ Knight ->
                 if
-                    (rowDelta == 1 && colDelta == 2)
+                    ((rowDelta == 1 && colDelta == 2)
                         || (rowDelta == 2 && colDelta == 1)
+                    )
                         && onOppositeTeams
                 then
                     True
