@@ -80,20 +80,52 @@ type Msg
 movePiece position currentPiece model =
     case ( currentPiece, model.movingPiece, model.movingFrom ) of
         ( Just Empty, Just newPiece, Just oldPosition ) ->
-            if Board.canMoveTo newPiece (convertPosition oldPosition) (convertPosition position) then
-                { model
-                    | board =
-                        model.board
-                            |> (Dict.insert position newPiece)
-                            |> (Dict.insert oldPosition Empty)
-                    , movingPiece = Nothing
-                    , movingFrom = Nothing
-                }
-            else
-                { model
-                    | movingPiece = Nothing
-                    , movingFrom = Nothing
-                }
+            let
+                canMove =
+                    Board.canMoveTo
+                        newPiece
+                        (convertPosition oldPosition)
+                        Empty
+                        (convertPosition position)
+            in
+                if canMove then
+                    { model
+                        | board =
+                            model.board
+                                |> (Dict.insert position newPiece)
+                                |> (Dict.insert oldPosition Empty)
+                        , movingPiece = Nothing
+                        , movingFrom = Nothing
+                    }
+                else
+                    { model
+                        | movingPiece = Nothing
+                        , movingFrom = Nothing
+                    }
+
+        ( Just currentPiece, Just newPiece, Just oldPosition ) ->
+            let
+                canMove =
+                    Board.canMoveTo
+                        newPiece
+                        (convertPosition oldPosition)
+                        currentPiece
+                        (convertPosition position)
+            in
+                if canMove then
+                    { model
+                        | board =
+                            model.board
+                                |> (Dict.insert position newPiece)
+                                |> (Dict.insert oldPosition Empty)
+                        , movingPiece = Nothing
+                        , movingFrom = Nothing
+                    }
+                else
+                    { model
+                        | movingPiece = Nothing
+                        , movingFrom = Nothing
+                    }
 
         _ ->
             { model

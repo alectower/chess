@@ -100,8 +100,37 @@ init =
         ]
 
 
-canMoveTo : TeamPiece -> Position -> Position -> Bool
-canMoveTo piece from to =
+oppositeTeams : TeamPiece -> TeamPiece -> Bool
+oppositeTeams teamOne teamTwo =
+    case teamOne of
+        TeamPiece White _ ->
+            case teamTwo of
+                TeamPiece White _ ->
+                    False
+
+                TeamPiece Black _ ->
+                    True
+
+                Empty ->
+                    True
+
+        TeamPiece Black _ ->
+            case teamTwo of
+                TeamPiece White _ ->
+                    True
+
+                TeamPiece Black _ ->
+                    False
+
+                Empty ->
+                    True
+
+        Empty ->
+            True
+
+
+canMoveTo : TeamPiece -> Position -> TeamPiece -> Position -> Bool
+canMoveTo movingPiece from currentPiece to =
     let
         fromRow =
             Tuple.first from
@@ -120,46 +149,60 @@ canMoveTo piece from to =
 
         colDelta =
             abs (toCol - fromCol)
+
+        onOppositeTeams =
+            oppositeTeams currentPiece movingPiece
     in
-        case piece of
+        case movingPiece of
             TeamPiece _ King ->
-                if (rowDelta == 1 || rowDelta == 0) && (colDelta == 1 || colDelta == 0) then
+                if
+                    (rowDelta == 1 || rowDelta == 0)
+                        && (colDelta == 1 || colDelta == 0)
+                        && onOppositeTeams
+                then
                     True
                 else
                     False
 
             TeamPiece _ Queen ->
-                if (rowDelta == colDelta) || (rowDelta == 0 || colDelta == 0) then
+                if
+                    (rowDelta == colDelta && from /= to)
+                        || (rowDelta == 0 || colDelta == 0)
+                        && onOppositeTeams
+                then
                     True
                 else
                     False
 
             TeamPiece _ Bishop ->
-                if (rowDelta == colDelta) then
+                if (rowDelta == colDelta) && onOppositeTeams then
                     True
                 else
                     False
 
             TeamPiece _ Knight ->
-                if (rowDelta == 1 && colDelta == 2) || (rowDelta == 2 && colDelta == 1) then
+                if
+                    (rowDelta == 1 && colDelta == 2)
+                        || (rowDelta == 2 && colDelta == 1)
+                        && onOppositeTeams
+                then
                     True
                 else
                     False
 
             TeamPiece _ Rook ->
-                if rowDelta == 0 || colDelta == 0 then
+                if (rowDelta == 0 || colDelta == 0) && onOppositeTeams then
                     True
                 else
                     False
 
             TeamPiece team Pawn ->
                 if
-                    rowDelta
-                        == 1
-                        && colDelta
-                        == 0
+                    ((fromRow < toRow && team == Black) || (fromRow > toRow && team == White))
+                        && (rowDelta == 1 && colDelta == 0 && currentPiece == Empty)
                         || (team == White && fromRow == 7 && rowDelta == 2 && colDelta == 0)
                         || (team == Black && fromRow == 2 && rowDelta == 2 && colDelta == 0)
+                        || (rowDelta == 1 && colDelta == 1 && onOppositeTeams)
                 then
                     True
                 else
