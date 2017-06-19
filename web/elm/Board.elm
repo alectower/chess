@@ -204,7 +204,7 @@ canMoveTo movingPiece from currentPiece to =
                         && (rowDelta == 1 && colDelta == 0 && currentPiece == Empty)
                         || (team == White && fromRow == 7 && rowDelta == 2 && colDelta == 0)
                         || (team == Black && fromRow == 2 && rowDelta == 2 && colDelta == 0)
-                        || (rowDelta == 1 && colDelta == 1 && onOppositeTeams)
+                        || (rowDelta == 1 && colDelta == 1 && onOppositeTeams && currentPiece /= Empty)
                 then
                     True
                 else
