@@ -19,7 +19,6 @@ type Piece
 
 type TeamPiece
     = TeamPiece Team Piece
-    | Empty
 
 
 type alias Position =
@@ -27,83 +26,83 @@ type alias Position =
 
 
 type alias Board =
-    Dict String TeamPiece
+    Dict String (Maybe TeamPiece)
 
 
 init : Board
 init =
     Dict.fromList
-        [ ( "11", TeamPiece Black Rook )
-        , ( "12", TeamPiece Black Knight )
-        , ( "13", TeamPiece Black Bishop )
-        , ( "14", TeamPiece Black Queen )
-        , ( "15", TeamPiece Black King )
-        , ( "16", TeamPiece Black Bishop )
-        , ( "17", TeamPiece Black Knight )
-        , ( "18", TeamPiece Black Rook )
-        , ( "21", TeamPiece Black Pawn )
-        , ( "22", TeamPiece Black Pawn )
-        , ( "23", TeamPiece Black Pawn )
-        , ( "24", TeamPiece Black Pawn )
-        , ( "25", TeamPiece Black Pawn )
-        , ( "26", TeamPiece Black Pawn )
-        , ( "27", TeamPiece Black Pawn )
-        , ( "28", TeamPiece Black Pawn )
-        , ( "31", Empty )
-        , ( "32", Empty )
-        , ( "33", Empty )
-        , ( "34", Empty )
-        , ( "35", Empty )
-        , ( "36", Empty )
-        , ( "37", Empty )
-        , ( "38", Empty )
-        , ( "41", Empty )
-        , ( "42", Empty )
-        , ( "43", Empty )
-        , ( "44", Empty )
-        , ( "45", Empty )
-        , ( "46", Empty )
-        , ( "47", Empty )
-        , ( "48", Empty )
-        , ( "51", Empty )
-        , ( "52", Empty )
-        , ( "53", Empty )
-        , ( "54", Empty )
-        , ( "55", Empty )
-        , ( "56", Empty )
-        , ( "57", Empty )
-        , ( "58", Empty )
-        , ( "61", Empty )
-        , ( "62", Empty )
-        , ( "63", Empty )
-        , ( "64", Empty )
-        , ( "65", Empty )
-        , ( "66", Empty )
-        , ( "67", Empty )
-        , ( "68", Empty )
-        , ( "71", TeamPiece White Pawn )
-        , ( "72", TeamPiece White Pawn )
-        , ( "73", TeamPiece White Pawn )
-        , ( "74", TeamPiece White Pawn )
-        , ( "75", TeamPiece White Pawn )
-        , ( "76", TeamPiece White Pawn )
-        , ( "77", TeamPiece White Pawn )
-        , ( "78", TeamPiece White Pawn )
-        , ( "81", TeamPiece White Rook )
-        , ( "82", TeamPiece White Knight )
-        , ( "83", TeamPiece White Bishop )
-        , ( "84", TeamPiece White Queen )
-        , ( "85", TeamPiece White King )
-        , ( "86", TeamPiece White Bishop )
-        , ( "87", TeamPiece White Knight )
-        , ( "88", TeamPiece White Rook )
+        [ ( "11", Just (TeamPiece Black Rook) )
+        , ( "12", Just (TeamPiece Black Knight) )
+        , ( "13", Just (TeamPiece Black Bishop) )
+        , ( "14", Just (TeamPiece Black Queen) )
+        , ( "15", Just (TeamPiece Black King) )
+        , ( "16", Just (TeamPiece Black Bishop) )
+        , ( "17", Just (TeamPiece Black Knight) )
+        , ( "18", Just (TeamPiece Black Rook) )
+        , ( "21", Just (TeamPiece Black Pawn) )
+        , ( "22", Just (TeamPiece Black Pawn) )
+        , ( "23", Just (TeamPiece Black Pawn) )
+        , ( "24", Just (TeamPiece Black Pawn) )
+        , ( "25", Just (TeamPiece Black Pawn) )
+        , ( "26", Just (TeamPiece Black Pawn) )
+        , ( "27", Just (TeamPiece Black Pawn) )
+        , ( "28", Just (TeamPiece Black Pawn) )
+        , ( "31", Nothing )
+        , ( "32", Nothing )
+        , ( "33", Nothing )
+        , ( "34", Nothing )
+        , ( "35", Nothing )
+        , ( "36", Nothing )
+        , ( "37", Nothing )
+        , ( "38", Nothing )
+        , ( "41", Nothing )
+        , ( "42", Nothing )
+        , ( "43", Nothing )
+        , ( "44", Nothing )
+        , ( "45", Nothing )
+        , ( "46", Nothing )
+        , ( "47", Nothing )
+        , ( "48", Nothing )
+        , ( "51", Nothing )
+        , ( "52", Nothing )
+        , ( "53", Nothing )
+        , ( "54", Nothing )
+        , ( "55", Nothing )
+        , ( "56", Nothing )
+        , ( "57", Nothing )
+        , ( "58", Nothing )
+        , ( "61", Nothing )
+        , ( "62", Nothing )
+        , ( "63", Nothing )
+        , ( "64", Nothing )
+        , ( "65", Nothing )
+        , ( "66", Nothing )
+        , ( "67", Nothing )
+        , ( "68", Nothing )
+        , ( "71", Just (TeamPiece White Pawn) )
+        , ( "72", Just (TeamPiece White Pawn) )
+        , ( "73", Just (TeamPiece White Pawn) )
+        , ( "74", Just (TeamPiece White Pawn) )
+        , ( "75", Just (TeamPiece White Pawn) )
+        , ( "76", Just (TeamPiece White Pawn) )
+        , ( "77", Just (TeamPiece White Pawn) )
+        , ( "78", Just (TeamPiece White Pawn) )
+        , ( "81", Just (TeamPiece White Rook) )
+        , ( "82", Just (TeamPiece White Knight) )
+        , ( "83", Just (TeamPiece White Bishop) )
+        , ( "84", Just (TeamPiece White Queen) )
+        , ( "85", Just (TeamPiece White King) )
+        , ( "86", Just (TeamPiece White Bishop) )
+        , ( "87", Just (TeamPiece White Knight) )
+        , ( "88", Just (TeamPiece White Rook) )
         ]
 
 
-oppositeTeams : TeamPiece -> TeamPiece -> Bool
+oppositeTeams : Maybe TeamPiece -> TeamPiece -> Bool
 oppositeTeams teamOne teamTwo =
     case teamOne of
-        TeamPiece White _ ->
+        Just (TeamPiece White _) ->
             case teamTwo of
                 TeamPiece White _ ->
                     False
@@ -111,10 +110,7 @@ oppositeTeams teamOne teamTwo =
                 TeamPiece Black _ ->
                     True
 
-                Empty ->
-                    True
-
-        TeamPiece Black _ ->
+        Just (TeamPiece Black _) ->
             case teamTwo of
                 TeamPiece White _ ->
                     True
@@ -122,14 +118,11 @@ oppositeTeams teamOne teamTwo =
                 TeamPiece Black _ ->
                     False
 
-                Empty ->
-                    True
-
-        Empty ->
+        Nothing ->
             True
 
 
-canMoveTo : TeamPiece -> Position -> TeamPiece -> Position -> Bool
+canMoveTo : TeamPiece -> Position -> Maybe TeamPiece -> Position -> Bool
 canMoveTo movingPiece from currentPiece to =
     let
         fromRow =
@@ -201,14 +194,11 @@ canMoveTo movingPiece from currentPiece to =
             TeamPiece team Pawn ->
                 if
                     ((fromRow < toRow && team == Black) || (fromRow > toRow && team == White))
-                        && (rowDelta == 1 && colDelta == 0 && currentPiece == Empty)
+                        && (rowDelta == 1 && colDelta == 0 && currentPiece == Nothing)
                         || (team == White && fromRow == 7 && rowDelta == 2 && colDelta == 0)
                         || (team == Black && fromRow == 2 && rowDelta == 2 && colDelta == 0)
-                        || (rowDelta == 1 && colDelta == 1 && onOppositeTeams && currentPiece /= Empty)
+                        || (rowDelta == 1 && colDelta == 1 && onOppositeTeams && currentPiece /= Nothing)
                 then
                     True
                 else
                     False
-
-            Empty ->
-                False

@@ -38,6 +38,7 @@ type alias Model =
     { board : Board
     , movingPiece : Maybe TeamPiece
     , movingFrom : Maybe String
+    , teamTurn : Team
     , socketUrl : String
     }
 
@@ -52,6 +53,7 @@ model =
     { movingPiece = Nothing
     , movingFrom = Nothing
     , board = Board.init
+    , teamTurn = White
     , socketUrl = "ws://localhost:4001/socket/websocket"
     }
 
@@ -87,12 +89,12 @@ convertPosition position =
 
 type Msg
     = NewGame
-    | Move TeamPiece String
+    | Move (Maybe TeamPiece) String
     | DropOn String
     | UpdateBoard Encode.Value
 
 
-updateModel : List ( String, TeamPiece ) -> Model -> Model
+updateModel : List ( String, Maybe TeamPiece ) -> Model -> Model
 updateModel pieces model =
     List.foldl
         (\a b ->
@@ -106,7 +108,7 @@ updateModel pieces model =
         pieces
 
 
-movePiece : String -> TeamPiece -> Model -> Model
+movePiece : String -> Maybe TeamPiece -> Model -> Model
 movePiece position currentPiece model =
     let
         sameBoard =
@@ -116,13 +118,13 @@ movePiece position currentPiece model =
             }
     in
         case ( currentPiece, model.movingPiece, model.movingFrom ) of
-            ( Empty, Just newPiece, Just oldPosition ) ->
+            ( Nothing, Just newPiece, Just oldPosition ) ->
                 let
                     canMove =
-                        Board.canMoveTo newPiece (convertPosition oldPosition) Empty (convertPosition position)
+                        Board.canMoveTo newPiece (convertPosition oldPosition) Nothing (convertPosition position)
                 in
                     if canMove then
-                        updateModel [ ( position, newPiece ), ( oldPosition, Empty ) ] model
+                        updateModel [ ( position, Just newPiece ), ( oldPosition, Nothing ) ] model
                     else
                         sameBoard
 
@@ -132,7 +134,7 @@ movePiece position currentPiece model =
                         Board.canMoveTo newPiece (convertPosition oldPosition) currentPiece (convertPosition position)
                 in
                     if canMove then
-                        updateModel [ ( position, newPiece ), ( oldPosition, Empty ) ] model
+                        updateModel [ ( position, Just newPiece ), ( oldPosition, Nothing ) ] model
                     else
                         sameBoard
 
@@ -148,7 +150,7 @@ update msg model =
 
         Move teamPiece position ->
             ( { model
-                | movingPiece = Just teamPiece
+                | movingPiece = teamPiece
                 , movingFrom = Just position
               }
             , Cmd.none
@@ -173,7 +175,7 @@ update msg model =
                         movePiece position piece model ! [ Phoenix.push model.socketUrl message ]
 
                     Nothing ->
-                        movePiece position Empty model ! [ Phoenix.push model.socketUrl message ]
+                        movePiece position Nothing model ! [ Phoenix.push model.socketUrl message ]
 
         UpdateBoard raw ->
             let
@@ -230,48 +232,50 @@ view model =
             (List.map rowSlice endRowNumbers |> List.map placeRow)
 
 
+pieceDisplay : Maybe TeamPiece -> String
 pieceDisplay teampiece =
     case teampiece of
-        TeamPiece White King ->
+        Just (TeamPiece White King) ->
             "♔"
 
-        TeamPiece White Queen ->
+        Just (TeamPiece White Queen) ->
             "♕"
 
-        TeamPiece White Rook ->
+        Just (TeamPiece White Rook) ->
             "♖"
 
-        TeamPiece White Bishop ->
+        Just (TeamPiece White Bishop) ->
             "♗"
 
-        TeamPiece White Knight ->
+        Just (TeamPiece White Knight) ->
             "♘"
 
-        TeamPiece White Pawn ->
+        Just (TeamPiece White Pawn) ->
             "♙"
 
-        TeamPiece Black King ->
+        Just (TeamPiece Black King) ->
             "♚"
 
-        TeamPiece Black Queen ->
+        Just (TeamPiece Black Queen) ->
             "♛"
 
-        TeamPiece Black Rook ->
+        Just (TeamPiece Black Rook) ->
             "♜"
 
-        TeamPiece Black Bishop ->
+        Just (TeamPiece Black Bishop) ->
             "♝"
 
-        TeamPiece Black Knight ->
+        Just (TeamPiece Black Knight) ->
             "♞"
 
-        TeamPiece Black Pawn ->
+        Just (TeamPiece Black Pawn) ->
             "♟"
 
-        Empty ->
+        Nothing ->
             ""
 
 
+placePiece : ( String, Maybe TeamPiece ) -> Html Msg
 placePiece ( position, piece ) =
     div
         [ class "square"
@@ -288,6 +292,7 @@ placePiece ( position, piece ) =
         ]
 
 
+placeRow : List ( String, Maybe TeamPiece ) -> Html Msg
 placeRow pieces =
     div [ class "row" ]
         (List.map placePiece pieces)
