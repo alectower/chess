@@ -9,6 +9,12 @@ import Array exposing (..)
 import Dict exposing (..)
 import Char exposing (toCode)
 import Board exposing (..)
+import Json.Encode as Encode exposing (..)
+import Json.Decode as Decode exposing (..)
+import Phoenix
+import Phoenix.Socket as Socket
+import Phoenix.Channel as Channel
+import Phoenix.Push as Push
 
 
 -- MAIN
@@ -16,10 +22,11 @@ import Board exposing (..)
 
 main : Program Never Model Msg
 main =
-    Html.beginnerProgram
-        { model = model
+    Html.program
+        { init = init
         , view = view
         , update = update
+        , subscriptions = subscriptions
         }
 
 
@@ -31,7 +38,13 @@ type alias Model =
     { board : Board
     , movingPiece : Maybe TeamPiece
     , movingFrom : Maybe String
+    , socketUrl : String
     }
+
+
+init : ( Model, Cmd Msg )
+init =
+    ( model, Cmd.none )
 
 
 model : Model
@@ -39,6 +52,7 @@ model =
     { movingPiece = Nothing
     , movingFrom = Nothing
     , board = Board.init
+    , socketUrl = "ws://localhost:4001/socket/websocket"
     }
 
 
@@ -75,6 +89,7 @@ type Msg
     = NewGame
     | Move TeamPiece String
     | DropOn String
+    | UpdateBoard Encode.Value
 
 
 updateModel : List ( String, TeamPiece ) -> Model -> Model
@@ -125,29 +140,72 @@ movePiece position currentPiece model =
                 sameBoard
 
 
-update : Msg -> Model -> Model
+update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
         NewGame ->
-            model
+            ( model, Cmd.none )
 
         Move teamPiece position ->
-            { model
+            ( { model
                 | movingPiece = Just teamPiece
                 , movingFrom = Just position
-            }
+              }
+            , Cmd.none
+            )
 
         DropOn position ->
             let
                 currentPiece =
                     Dict.get position model.board
+
+                payload =
+                    Encode.object []
+
+                message =
+                    Push.init "game" "update_board" |> Push.withPayload payload
+
+                logMessage =
+                    Debug.log "message" message
             in
                 case currentPiece of
                     Just piece ->
-                        movePiece position piece model
+                        movePiece position piece model ! [ Phoenix.push model.socketUrl message ]
 
                     Nothing ->
-                        movePiece position Empty model
+                        movePiece position Empty model ! [ Phoenix.push model.socketUrl message ]
+
+        UpdateBoard raw ->
+            let
+                logRaw =
+                    Debug.log "board" raw
+            in
+                case raw of
+                    _ ->
+                        ( model, Cmd.none )
+
+
+encodeSocketMessage topic event payload ref =
+    Encode.object
+        [ ( "topic", Encode.string topic )
+        , ( "event", Encode.string event )
+        , ( "payload", Encode.string payload )
+        , ( "ref", Encode.string ref )
+        ]
+        |> Encode.encode 0
+
+
+
+-- SUBSCRIPTIONS
+
+
+subscriptions : Model -> Sub Msg
+subscriptions model =
+    let
+        channel =
+            Channel.init "game" |> Channel.on "update_board" UpdateBoard
+    in
+        Phoenix.connect (Socket.init model.socketUrl) <| [ channel ]
 
 
 
