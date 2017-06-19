@@ -108,6 +108,16 @@ updateModel pieces model =
         pieces
 
 
+oppositeTeamTurn : Team -> Team
+oppositeTeamTurn team =
+    case team of
+        White ->
+            Black
+
+        Black ->
+            White
+
+
 movePiece : String -> Maybe TeamPiece -> Model -> Model
 movePiece position currentPiece model =
     let
@@ -118,23 +128,47 @@ movePiece position currentPiece model =
             }
     in
         case ( currentPiece, model.movingPiece, model.movingFrom ) of
-            ( Nothing, Just newPiece, Just oldPosition ) ->
+            ( Nothing, Just (TeamPiece movingTeam movingPiece), Just oldPosition ) ->
                 let
+                    newPiece =
+                        TeamPiece movingTeam movingPiece
+
                     canMove =
-                        Board.canMoveTo newPiece (convertPosition oldPosition) Nothing (convertPosition position)
+                        model.teamTurn
+                            == movingTeam
+                            && Board.canMoveTo
+                                newPiece
+                                (convertPosition oldPosition)
+                                Nothing
+                                (convertPosition position)
+
+                    updatedModel =
+                        updateModel [ ( position, Just newPiece ), ( oldPosition, Nothing ) ] model
                 in
                     if canMove then
-                        updateModel [ ( position, Just newPiece ), ( oldPosition, Nothing ) ] model
+                        { updatedModel | teamTurn = oppositeTeamTurn movingTeam }
                     else
                         sameBoard
 
-            ( currentPiece, Just newPiece, Just oldPosition ) ->
+            ( currentPiece, Just (TeamPiece movingTeam movingPiece), Just oldPosition ) ->
                 let
+                    newPiece =
+                        TeamPiece movingTeam movingPiece
+
                     canMove =
-                        Board.canMoveTo newPiece (convertPosition oldPosition) currentPiece (convertPosition position)
+                        model.teamTurn
+                            == movingTeam
+                            && Board.canMoveTo
+                                newPiece
+                                (convertPosition oldPosition)
+                                currentPiece
+                                (convertPosition position)
+
+                    updatedModel =
+                        updateModel [ ( position, Just newPiece ), ( oldPosition, Nothing ) ] model
                 in
                     if canMove then
-                        updateModel [ ( position, Just newPiece ), ( oldPosition, Nothing ) ] model
+                        { updatedModel | teamTurn = oppositeTeamTurn movingTeam }
                     else
                         sameBoard
 
@@ -229,7 +263,35 @@ view model =
             Array.slice (n - 8) n boardPieces |> Array.toList
     in
         div [ class "board" ]
-            (List.map rowSlice endRowNumbers |> List.map placeRow)
+            ((div
+                [ class "team-turn" ]
+                [ div [] [ text (String.concat [ "Turn: ", (toString model.teamTurn) ]) ] ]
+             )
+                :: (List.map rowSlice endRowNumbers |> List.map placeRow)
+            )
+
+
+placeRow : List ( String, Maybe TeamPiece ) -> Html Msg
+placeRow pieces =
+    div [ class "row" ]
+        (List.map placePiece pieces)
+
+
+placePiece : ( String, Maybe TeamPiece ) -> Html Msg
+placePiece ( position, piece ) =
+    div
+        [ class "square"
+        , id position
+        , attribute "ondragover" "return false"
+        , onDrop <| DropOn position
+        ]
+        [ div
+            [ class "piece"
+            , draggable "true"
+            , onDragStart <| Move piece position
+            ]
+            [ text (pieceDisplay piece) ]
+        ]
 
 
 pieceDisplay : Maybe TeamPiece -> String
@@ -273,26 +335,3 @@ pieceDisplay teampiece =
 
         Nothing ->
             ""
-
-
-placePiece : ( String, Maybe TeamPiece ) -> Html Msg
-placePiece ( position, piece ) =
-    div
-        [ class "square"
-        , id position
-        , attribute "ondragover" "return false"
-        , onDrop <| DropOn position
-        ]
-        [ div
-            [ class "piece"
-            , draggable "true"
-            , onDragStart <| Move piece position
-            ]
-            [ text (pieceDisplay piece) ]
-        ]
-
-
-placeRow : List ( String, Maybe TeamPiece ) -> Html Msg
-placeRow pieces =
-    div [ class "row" ]
-        (List.map placePiece pieces)
