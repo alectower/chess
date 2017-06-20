@@ -10,10 +10,9 @@ defmodule Chess.GameChannel do
   end
 
   def handle_in("update_board", data, socket) do
-    IO.inspect "update_board"
-
     Chess.Endpoint.broadcast! "game", "update_board",
-    %{ board: [] }
+
+    %{ board: data |> Map.get("board") }
 
     {:noreply, socket}
   end

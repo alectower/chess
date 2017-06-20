@@ -196,7 +196,7 @@ update msg model =
                     Dict.get position model.board
 
                 payload =
-                    Encode.object []
+                    Encode.object [ ( "board", Encode.object [] ) ]
 
                 message =
                     Push.init "game" "update_board" |> Push.withPayload payload
