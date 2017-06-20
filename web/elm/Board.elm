@@ -192,13 +192,23 @@ canMoveTo movingPiece from currentPiece to =
                     False
 
             TeamPiece team Pawn ->
-                if
-                    ((fromRow < toRow && team == Black) || (fromRow > toRow && team == White))
-                        && (rowDelta == 1 && colDelta == 0 && currentPiece == Nothing)
-                        || (team == White && fromRow == 7 && rowDelta == 2 && colDelta == 0)
-                        || (team == Black && fromRow == 2 && rowDelta == 2 && colDelta == 0)
-                        || (rowDelta == 1 && colDelta == 1 && onOppositeTeams && currentPiece /= Nothing)
-                then
-                    True
-                else
-                    False
+                let
+                    forwardMove =
+                        (fromRow < toRow && team == Black) || (fromRow > toRow && team == White)
+
+                    singleStep =
+                        rowDelta == 1 && colDelta == 0 && currentPiece == Nothing
+
+                    firstMoveWhite =
+                        team == White && fromRow == 7 && rowDelta == 2 && colDelta == 0
+
+                    firstMoveBlack =
+                        team == Black && fromRow == 2 && rowDelta == 2 && colDelta == 0
+
+                    attack =
+                        rowDelta == 1 && colDelta == 1 && onOppositeTeams && currentPiece /= Nothing
+                in
+                    if forwardMove && (singleStep || firstMoveWhite || firstMoveBlack || attack) then
+                        True
+                    else
+                        False
