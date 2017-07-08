@@ -253,7 +253,7 @@ update msg model =
                     Board.decodeBoard (Decode.decodeValue (Decode.field "board" Decode.string) raw)
             in
                 if List.length (Dict.toList board) > 0 then
-                    ( { model | board = board, teamTurn = turn, gameId = gameId }, updateGameId gameId )
+                    ( { model | board = board, teamTurn = turn, gameId = gameId }, Cmd.none )
                 else
                     ( { model | gameId = gameId }, updateGameId gameId )
 

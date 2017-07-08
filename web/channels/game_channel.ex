@@ -39,7 +39,6 @@ defmodule Chess.GameChannel do
   end
 
   def handle_in("update_board", data, socket) do
-
     [_, game_id] = String.split socket.topic, ":"
 
     game = Repo.get_by(Chess.Game, game_id: game_id)
@@ -52,6 +51,7 @@ defmodule Chess.GameChannel do
       {:ok, struct}       ->
         Chess.Endpoint.broadcast! socket.topic,
           "update_board", %{
+            game_id: struct.game_id,
             board: struct.board |> Poison.encode!,
             turn: struct.turn
           }
@@ -59,6 +59,7 @@ defmodule Chess.GameChannel do
       {:error, changeset} ->
         Chess.Endpoint.broadcast! socket.topic,
           "update_board", %{
+            game_id: data |> Map.get("game_id"),
             board: data |> Map.get("board") |> Poison.encode!,
             turn: data |> Map.get("turn")
           }
