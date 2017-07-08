@@ -1,6 +1,9 @@
 module Board exposing (..)
 
 import Dict exposing (Dict)
+import Json.Encode as Encode exposing (..)
+import Json.Decode as Decode exposing (..)
+import Array exposing (get)
 
 
 type Team
@@ -27,6 +30,105 @@ type alias Position =
 
 type alias Board =
     Dict String (Maybe TeamPiece)
+
+
+encodePieceToString piece =
+    case piece of
+        Nothing ->
+            Encode.string ""
+
+        Just (TeamPiece a b) ->
+            Encode.string ((toString a) ++ " " ++ (toString b))
+
+
+encodeBoard board =
+    board
+        |> Dict.toList
+        |> List.map
+            (\k ->
+                ( Tuple.first k
+                , encodePieceToString (Tuple.second k)
+                )
+            )
+        |> Encode.object
+
+
+decodeStringToPiece pieceString =
+    case pieceString of
+        "" ->
+            Nothing
+
+        a ->
+            let
+                teamPiece =
+                    String.split " " a |> Array.fromList
+
+                teamString =
+                    Array.get 0 teamPiece
+
+                pieceString =
+                    Array.get 1 teamPiece
+
+                team =
+                    if teamString == Just "White" then
+                        White
+                    else
+                        Black
+            in
+                case pieceString of
+                    Just "Pawn" ->
+                        Just (TeamPiece team Pawn)
+
+                    Just "Rook" ->
+                        Just (TeamPiece team Rook)
+
+                    Just "Knight" ->
+                        Just (TeamPiece team Knight)
+
+                    Just "Bishop" ->
+                        Just (TeamPiece team Bishop)
+
+                    Just "Queen" ->
+                        Just (TeamPiece team Queen)
+
+                    Just "King" ->
+                        Just (TeamPiece team King)
+
+                    _ ->
+                        Nothing
+
+
+decodeTurn result =
+    case result of
+        Ok a ->
+            if a == "White" then
+                White
+            else
+                Black
+
+        Err a ->
+            White
+
+
+decodeBoard result =
+    case result of
+        Ok a ->
+            let
+                board =
+                    (Decode.decodeString (Decode.keyValuePairs Decode.string) a)
+
+                boardWithPieces =
+                    case board of
+                        Ok a ->
+                            List.map (\p -> ( Tuple.first p, (decodeStringToPiece (Tuple.second p)) )) a
+
+                        Err a ->
+                            []
+            in
+                Dict.fromList boardWithPieces
+
+        Err a ->
+            Dict.fromList []
 
 
 init : Board

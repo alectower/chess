@@ -1,4 +1,4 @@
-module Chess exposing (..)
+port module Chess exposing (..)
 
 import Debug exposing (..)
 import Maybe exposing (..)
@@ -17,12 +17,19 @@ import Phoenix.Channel as Channel
 import Phoenix.Push as Push
 
 
+-- PORTS
+
+
+port updateGameId : String -> Cmd msg
+
+
+
 -- MAIN
 
 
-main : Program Never Model Msg
+main : Program Flags Model Msg
 main =
-    Html.program
+    Html.programWithFlags
         { init = init
         , view = view
         , update = update
@@ -40,12 +47,17 @@ type alias Model =
     , movingFrom : Maybe String
     , teamTurn : Team
     , socketUrl : String
+    , gameId : String
     }
 
 
-init : ( Model, Cmd Msg )
-init =
-    ( model, Cmd.none )
+type alias Flags =
+    { gameId : String }
+
+
+init : Flags -> ( Model, Cmd Msg )
+init flags =
+    ( { model | gameId = flags.gameId }, Cmd.none )
 
 
 model : Model
@@ -55,6 +67,7 @@ model =
     , board = Board.init
     , teamTurn = White
     , socketUrl = "ws://localhost:4001/socket/websocket"
+    , gameId = ""
     }
 
 
@@ -99,9 +112,7 @@ updateModel pieces model =
     List.foldl
         (\a b ->
             { b
-                | board =
-                    b.board
-                        |> Dict.insert (Tuple.first a) (Tuple.second a)
+                | board = b.board |> Dict.insert (Tuple.first a) (Tuple.second a)
             }
         )
         model
@@ -176,6 +187,18 @@ movePiece position currentPiece model =
                 sameBoard
 
 
+newModelPayload model =
+    let
+        payload =
+            Encode.object
+                [ ( "board", (Board.encodeBoard model.board) )
+                , ( "turn", Encode.string (toString model.teamTurn) )
+                ]
+    in
+        Push.init ("game:" ++ model.gameId) "update_board"
+            |> Push.withPayload payload
+
+
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
@@ -194,41 +217,45 @@ update msg model =
             let
                 currentPiece =
                     Dict.get position model.board
-
-                payload =
-                    Encode.object [ ( "board", Encode.object [] ) ]
-
-                message =
-                    Push.init "game" "update_board" |> Push.withPayload payload
-
-                logMessage =
-                    Debug.log "message" message
             in
                 case currentPiece of
                     Just piece ->
-                        movePiece position piece model ! [ Phoenix.push model.socketUrl message ]
+                        let
+                            newModel =
+                                movePiece position piece model
+                        in
+                            newModel ! [ Phoenix.push model.socketUrl (newModelPayload newModel) ]
 
                     Nothing ->
-                        movePiece position Nothing model ! [ Phoenix.push model.socketUrl message ]
+                        let
+                            newModel =
+                                movePiece position Nothing model
+                        in
+                            newModel ! [ Phoenix.push model.socketUrl (newModelPayload newModel) ]
 
         UpdateBoard raw ->
             let
-                logRaw =
-                    Debug.log "board" raw
+                respGameId =
+                    Decode.decodeValue (Decode.field "game_id" Decode.string) raw
+
+                gameId =
+                    case respGameId of
+                        Ok id ->
+                            id
+
+                        Err a ->
+                            ""
+
+                turn =
+                    Board.decodeTurn (Decode.decodeValue (Decode.field "turn" Decode.string) raw)
+
+                board =
+                    Board.decodeBoard (Decode.decodeValue (Decode.field "board" Decode.string) raw)
             in
-                case raw of
-                    _ ->
-                        ( model, Cmd.none )
-
-
-encodeSocketMessage topic event payload ref =
-    Encode.object
-        [ ( "topic", Encode.string topic )
-        , ( "event", Encode.string event )
-        , ( "payload", Encode.string payload )
-        , ( "ref", Encode.string ref )
-        ]
-        |> Encode.encode 0
+                if List.length (Dict.toList board) > 0 then
+                    ( { model | board = board, teamTurn = turn, gameId = gameId }, updateGameId gameId )
+                else
+                    ( { model | gameId = gameId }, updateGameId gameId )
 
 
 
@@ -239,7 +266,9 @@ subscriptions : Model -> Sub Msg
 subscriptions model =
     let
         channel =
-            Channel.init "game" |> Channel.on "update_board" UpdateBoard
+            Channel.init ("game:" ++ model.gameId)
+                |> Channel.onJoin UpdateBoard
+                |> Channel.on "update_board" UpdateBoard
     in
         Phoenix.connect (Socket.init model.socketUrl) <| [ channel ]
 

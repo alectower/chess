@@ -20,5 +20,21 @@ import "phoenix_html"
 
 import socket from "./socket"
 
-const elmDiv = document.getElementById("elm-main")
-  , elmApp = Elm.Chess.embed(elmDiv)
+const paramsMap = new Map(
+  window.location.search
+    .replace("?", "")
+    .split("&")
+    .filter((z) => { return z != "" })
+    .map((s) => { return s.split("=") })
+)
+
+const elmDiv = document.getElementById("elm-main"),
+  elmApp = Elm.Chess.embed(elmDiv, {
+    gameId:  paramsMap.get("game_id") || ""
+  })
+
+elmApp.ports.updateGameId.subscribe(function(gameId) {
+  if (window.location.search.indexOf("game_id") == -1) {
+    window.location.href = window.location.origin + "?game_id=" + gameId
+  }
+});
