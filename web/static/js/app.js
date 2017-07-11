@@ -35,6 +35,7 @@ const paramsMap = new Map(
 
 const elmDiv = document.getElementById("elm-main"),
   elmApp = Elm.Chess.embed(elmDiv, {
+    host: location.host,
     gameId:  paramsMap.get("game_id") || ""
   })
 

@@ -52,12 +52,17 @@ type alias Model =
 
 
 type alias Flags =
-    { gameId : String }
+    { gameId : String, host : String }
 
 
 init : Flags -> ( Model, Cmd Msg )
 init flags =
-    ( { model | gameId = flags.gameId }, Cmd.none )
+    ( { model
+        | gameId = flags.gameId
+        , socketUrl = "ws://" ++ flags.host ++ "/socket/websocket"
+      }
+    , Cmd.none
+    )
 
 
 model : Model
@@ -66,7 +71,7 @@ model =
     , movingFrom = Nothing
     , board = Board.init
     , teamTurn = White
-    , socketUrl = "ws://localhost:4001/socket/websocket"
+    , socketUrl = ""
     , gameId = ""
     }
 
