@@ -3,9 +3,9 @@ defmodule Chess.GameChannel do
   alias Chess.Repo
 
   def join("game:" <> game_id, payload, socket) do
-    new_game_id = :crypto.strong_rand_bytes(30)
+    new_game_id = :crypto.strong_rand_bytes(40)
               |> Base.url_encode64
-              |> binary_part(0, 30)
+              |> binary_part(0, 40)
 
     new_game = &(
       Repo.insert %Chess.Game{
