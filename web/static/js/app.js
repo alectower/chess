@@ -11,7 +11,8 @@
 //
 // If you no longer want to use a dependency, remember
 // to also remove its path from "config.paths.watched".
-import "phoenix_html"
+//import "phoenix"
+//import "phoenix_html"
 
 // Import local files
 //
@@ -34,8 +35,9 @@ const paramsMap = new Map(
 )
 
 const elmDiv = document.getElementById("elm-main"),
+  protocol = location.protocol.search("s") != -1 ? "wss://" : "ws://",
   elmApp = Elm.Chess.embed(elmDiv, {
-    host: location.host,
+    host:  protocol + location.host,
     gameId:  paramsMap.get("game_id") || ""
   })
 

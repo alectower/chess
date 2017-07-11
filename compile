@@ -1,0 +1,15 @@
+cd $phoenix_dir/web/static/elm
+
+elm-install
+
+cd $phoenix_dir
+
+rm -rf web/static/elm/elm-stuff/packages/saschatimme/elm-phoenix/0.3.0/example
+
+npm run deploy
+
+mix "${phoenix_ex}.digest"
+
+if mix help "${phoenix_ex}.digest.clean" 1>/dev/null 2>&1; then
+  mix "${phoenix_ex}.digest.clean"
+fi

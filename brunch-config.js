@@ -41,9 +41,7 @@ exports.config = {
   paths: {
     // Dependencies and current project directories to watch
     watched: [
-      "web/static",
-      "test/static",
-      "web/elm"
+      "web/static"
     ],
 
     // Where to compile files to
@@ -57,9 +55,11 @@ exports.config = {
       ignore: [/web\/static\/vendor/]
     },
     elmBrunch: {
-      elmFolder: "web/elm",
+      elmFolder: "web/static/elm",
       mainModules: ["Chess.elm"],
-      outputFolder: "../static/vendor"
+      outputFolder: "../vendor",
+      makeParameters: ["--warn"],
+      executablePath: "../../../node_modules/elm/binwrappers"
     }
   },
 

@@ -59,7 +59,7 @@ init : Flags -> ( Model, Cmd Msg )
 init flags =
     ( { model
         | gameId = flags.gameId
-        , socketUrl = "ws://" ++ flags.host ++ "/socket/websocket"
+        , socketUrl = flags.host ++ "/socket/websocket"
       }
     , Cmd.none
     )
