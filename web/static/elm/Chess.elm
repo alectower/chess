@@ -1,13 +1,13 @@
 port module Chess exposing (..)
 
-import Debug exposing (..)
+--import Debug exposing (..)
+
 import Maybe exposing (..)
 import Html exposing (..)
 import Html.Attributes exposing (attribute, id, class, draggable)
 import DragEvents exposing (..)
 import Array exposing (..)
 import Dict exposing (..)
-import Char exposing (toCode)
 import Board exposing (..)
 import Json.Encode as Encode exposing (..)
 import Json.Decode as Decode exposing (..)
@@ -112,16 +112,21 @@ type Msg
     | UpdateBoard Encode.Value
 
 
-updateModel : List ( String, Maybe TeamPiece ) -> Model -> Model
-updateModel pieces model =
-    List.foldl
-        (\a b ->
-            { b
-                | board = b.board |> Dict.insert (Tuple.first a) (Tuple.second a)
-            }
-        )
-        model
-        pieces
+updatePiece : ( String, Maybe TeamPiece ) -> Model -> Model
+updatePiece a b =
+    let
+        square =
+            Tuple.first a
+
+        piece =
+            Tuple.second a
+    in
+        { b | board = b.board |> Dict.insert square piece }
+
+
+updateBoard : List ( String, Maybe TeamPiece ) -> Model -> Model
+updateBoard pieces model =
+    List.foldl updatePiece model pieces
 
 
 oppositeTeamTurn : Team -> Team
@@ -159,7 +164,7 @@ movePiece position currentPiece model =
                                 (convertPosition position)
 
                     updatedModel =
-                        updateModel [ ( position, Just newPiece ), ( oldPosition, Nothing ) ] model
+                        updateBoard [ ( position, Just newPiece ), ( oldPosition, Nothing ) ] model
                 in
                     if canMove then
                         { updatedModel | teamTurn = oppositeTeamTurn movingTeam }
@@ -181,7 +186,7 @@ movePiece position currentPiece model =
                                 (convertPosition position)
 
                     updatedModel =
-                        updateModel [ ( position, Just newPiece ), ( oldPosition, Nothing ) ] model
+                        updateBoard [ ( position, Just newPiece ), ( oldPosition, Nothing ) ] model
                 in
                     if canMove then
                         { updatedModel | teamTurn = oppositeTeamTurn movingTeam }
@@ -192,6 +197,7 @@ movePiece position currentPiece model =
                 sameBoard
 
 
+newModelPayload : Model -> Push.Push msg
 newModelPayload model =
     let
         payload =
@@ -297,35 +303,43 @@ view model =
             Array.slice (n - 8) n boardPieces |> Array.toList
     in
         div [ class "board" ]
-            ((div
-                [ class "team-turn" ]
-                [ div [] [ text (String.concat [ "Turn: ", (toString model.teamTurn) ]) ] ]
-             )
-                :: (List.map rowSlice endRowNumbers |> List.map placeRow)
+            (teamTurnElement model.teamTurn
+                :: (List.map rowSlice endRowNumbers |> List.map rowElement)
             )
 
 
-placeRow : List ( String, Maybe TeamPiece ) -> Html Msg
-placeRow pieces =
+teamTurnElement : Team -> Html msg
+teamTurnElement team =
+    div
+        [ class "team-turn" ]
+        [ div [] [ text ("Turn: " ++ toString team) ] ]
+
+
+rowElement : List ( String, Maybe TeamPiece ) -> Html Msg
+rowElement pieces =
     div [ class "row" ]
-        (List.map placePiece pieces)
+        (List.map squareElement pieces)
 
 
-placePiece : ( String, Maybe TeamPiece ) -> Html Msg
-placePiece ( position, piece ) =
+squareElement : ( String, Maybe TeamPiece ) -> Html Msg
+squareElement ( position, piece ) =
     div
         [ class "square"
         , id position
         , attribute "ondragover" "return false"
         , onDrop <| DropOn position
         ]
-        [ div
-            [ class "piece"
-            , draggable "true"
-            , onDragStart <| Move piece position
-            ]
-            [ text (pieceDisplay piece) ]
+        [ pieceElement position piece ]
+
+
+pieceElement : String -> Maybe TeamPiece -> Html Msg
+pieceElement position piece =
+    div
+        [ class "piece"
+        , draggable "true"
+        , onDragStart <| Move piece position
         ]
+        [ text (pieceDisplay piece) ]
 
 
 pieceDisplay : Maybe TeamPiece -> String

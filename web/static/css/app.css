@@ -1,6 +1,23 @@
-/* This file is for your main application css. */
+body, form, ul, table {
+  margin-top: 20px;
+  margin-bottom: 20px;
+}
+
+.alert:empty { display: none; }
+
+form.link, form.button {
+  display: inline;
+}
+
+@media (min-width: 768px) {
+  .container {
+    padding: 0px;
+    max-width: 640px;
+  }
+}
 
 .board .row {
+  margin: 0px;
   display: -webkit-box;
   display: -moz-box;
   display: -ms-flexbox;
@@ -64,4 +81,8 @@
 
 .board .row .square .piece:hover {
   cursor: pointer;
+}
+
+.board .team-turn {
+  margin-bottom: 20px;
 }
