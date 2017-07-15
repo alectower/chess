@@ -9,7 +9,10 @@
 }
 
 .board .row .square {
-  height: 80px;
+  height: 7.2vw;
+  min-height: 55px;
+  max-height: 70px;
+  max-width: 80px;
   border: 1px solid #ddd;
   -webkit-box-flex: 1;
   -moz-box-flex: 1;
