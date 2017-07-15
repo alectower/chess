@@ -4,6 +4,8 @@ import Dict exposing (Dict)
 import Json.Encode as Encode exposing (..)
 import Json.Decode as Decode exposing (..)
 import Array exposing (get)
+import Json.Encode as Encode exposing (..)
+import Json.Decode as Decode exposing (..)
 
 
 type Team
@@ -32,7 +34,8 @@ type alias Board =
     Dict String (Maybe TeamPiece)
 
 
-encodePieceToString piece =
+encodePiece : Maybe TeamPiece -> Encode.Value
+encodePiece piece =
     case piece of
         Nothing ->
             Encode.string ""
@@ -41,18 +44,20 @@ encodePieceToString piece =
             Encode.string ((toString a) ++ " " ++ (toString b))
 
 
+encodeBoard : Board -> Encode.Value
 encodeBoard board =
     board
         |> Dict.toList
         |> List.map
             (\k ->
                 ( Tuple.first k
-                , encodePieceToString (Tuple.second k)
+                , encodePiece (Tuple.second k)
                 )
             )
         |> Encode.object
 
 
+decodeStringToPiece : String -> Maybe TeamPiece
 decodeStringToPiece pieceString =
     case pieceString of
         "" ->
@@ -98,6 +103,7 @@ decodeStringToPiece pieceString =
                         Nothing
 
 
+decodeTurn : Result error String -> Team
 decodeTurn result =
     case result of
         Ok a ->
@@ -110,6 +116,7 @@ decodeTurn result =
             White
 
 
+decodeBoard : Result error String -> Board
 decodeBoard result =
     case result of
         Ok a ->
