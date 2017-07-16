@@ -7,6 +7,7 @@ cd $build_dir
 rm -rf web/static/elm/elm-stuff/packages/saschatimme/elm-phoenix/0.3.0/example
 
 npm run deploy
+npm run deploy
 
 cd $phoenix_dir
 

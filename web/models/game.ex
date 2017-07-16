@@ -3,6 +3,7 @@ defmodule Chess.Game do
 
   schema "games" do
     field :board, :map
+    field :moves, { :array, :string }
     field :game_id, :string
     field :turn, :string
 
@@ -15,6 +16,6 @@ defmodule Chess.Game do
   def changeset(struct, params \\ %{}) do
     struct
     |> cast(params, [:game_id, :turn])
-    |> validate_required([:board, :game_id, :turn])
+    |> validate_required([:board, :moves, :game_id, :turn])
   end
 end

@@ -11,6 +11,7 @@ defmodule Chess.GameChannel do
       Repo.insert %Chess.Game{
         game_id: &1,
         board: %{},
+        moves: [],
         turn: "White"
       }
     )
@@ -34,6 +35,7 @@ defmodule Chess.GameChannel do
     {:ok, %{
       game_id: game.game_id,
       board: game.board |> Poison.encode!,
+      moves: game.moves |> Poison.encode!,
       turn: game.turn
     }, socket}
   end
@@ -45,7 +47,8 @@ defmodule Chess.GameChannel do
 
     game = Ecto.Changeset.change game,
       board: data |> Map.get("board"),
-      turn: data |> Map.get("turn")
+      turn: data |> Map.get("turn"),
+      moves: data |> Map.get("moves")
 
     case Repo.update game do
       {:ok, struct}       ->
@@ -53,6 +56,7 @@ defmodule Chess.GameChannel do
           "update_board", %{
             game_id: struct.game_id,
             board: struct.board |> Poison.encode!,
+            moves: struct.moves |> Poison.encode!,
             turn: struct.turn
           }
 
@@ -61,6 +65,7 @@ defmodule Chess.GameChannel do
           "update_board", %{
             game_id: data |> Map.get("game_id"),
             board: data |> Map.get("board") |> Poison.encode!,
+            moves: data |> Map.get("moves") |> Poison.encode!,
             turn: data |> Map.get("turn")
           }
     end

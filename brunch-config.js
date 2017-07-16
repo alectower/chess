@@ -2,24 +2,7 @@ exports.config = {
   // See http://brunch.io/#documentation for docs.
   files: {
     javascripts: {
-      joinTo: "js/app.js",
-
-      // To use a separate vendor.js bundle, specify two files path
-      // http://brunch.io/docs/config#-files-
-      // joinTo: {
-      //  "js/app.js": /^(web\/static\/js)/,
-      //  "js/vendor.js": /^(web\/static\/vendor)|(deps)/
-      // }
-      //
-      // To change the order of concatenation of files, explicitly mention here
-      order: {
-        before: [
-          "web/static/vendor/chess.js",
-          "web/static/js/ios-drag-drop.js",
-          "web/static/js/socket.js",
-          "web/static/js/app.js"
-        ]
-      }
+      joinTo: "js/app.js"
     },
     stylesheets: {
       joinTo: "css/app.css",
@@ -60,8 +43,7 @@ exports.config = {
       elmFolder: "web/static/elm",
       mainModules: ["Chess.elm"],
       outputFolder: "../vendor",
-      makeParameters: ["--warn"],
-      executablePath: "../../../node_modules/elm/binwrappers"
+      makeParameters: ["--warn"]
     }
   },
 
