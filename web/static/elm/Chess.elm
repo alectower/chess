@@ -104,58 +104,68 @@ update msg model =
             )
 
         DropOn position ->
-            let
-                currentPiece =
-                    Dict.get position model.board
-            in
-                case currentPiece of
-                    Just piece ->
-                        let
-                            newModel =
-                                movePiece position piece model
-                        in
-                            newModel ! [ Phoenix.push model.socketUrl (newModelPayload newModel) ]
-
-                    Nothing ->
-                        let
-                            newModel =
-                                movePiece position Nothing model
-                        in
-                            newModel ! [ Phoenix.push model.socketUrl (newModelPayload newModel) ]
+            dropOn position model
 
         UpdateBoard raw ->
-            let
-                respGameId =
-                    Decode.decodeValue (Decode.field "game_id" Decode.string) raw
+            jsonToModel raw model
 
-                gameId =
-                    case respGameId of
-                        Ok id ->
-                            id
 
-                        Err a ->
-                            ""
+dropOn : String -> Model -> ( Model, Cmd msg )
+dropOn position model =
+    let
+        currentPiece =
+            Dict.get position model.board
+    in
+        case currentPiece of
+            Just piece ->
+                let
+                    newModel =
+                        movePiece position piece model
+                in
+                    newModel ! [ Phoenix.push model.socketUrl (newModelPayload newModel) ]
 
-                turn =
-                    Board.decodeTurn (Decode.decodeValue (Decode.field "turn" Decode.string) raw)
+            Nothing ->
+                let
+                    newModel =
+                        movePiece position Nothing model
+                in
+                    newModel ! [ Phoenix.push model.socketUrl (newModelPayload newModel) ]
 
-                board =
-                    Board.decodeBoard (Decode.decodeValue (Decode.field "board" Decode.string) raw)
 
-                moves =
-                    Board.decodeMoves (Decode.decodeValue (Decode.field "moves" Decode.string) raw)
-            in
-                if List.length (Dict.toList board) > 0 then
-                    ( { model
-                        | board = board
-                        , teamTurn = turn
-                        , gameId = gameId
-                        , moves = moves
-                      }
-                    , Cmd.none
-                    )
-                else
-                    ( { model | gameId = gameId }, updateGameId gameId )
+jsonToModel : Encode.Value -> Model -> ( Model, Cmd msg )
+jsonToModel raw model =
+    let
+        respGameId =
+            Decode.decodeValue (Decode.field "game_id" Decode.string) raw
+
+        gameId =
+            case respGameId of
+                Ok id ->
+                    id
+
+                Err a ->
+                    ""
+
+        turn =
+            Board.decodeTurn (Decode.decodeValue (Decode.field "turn" Decode.string) raw)
+
+        board =
+            Board.decodeBoard (Decode.decodeValue (Decode.field "board" Decode.string) raw)
+
+        moves =
+            Board.decodeMoves (Decode.decodeValue (Decode.field "moves" Decode.string) raw)
+    in
+        if List.length (Dict.toList board) > 0 then
+            ( { model
+                | board = board
+                , teamTurn = turn
+                , gameId = gameId
+                , moves = moves
+              }
+            , Cmd.none
+            )
+        else
+            ( { model | gameId = gameId }, updateGameId gameId )
 
 
 movePiece : String -> Maybe TeamPiece -> Model -> Model
@@ -192,7 +202,7 @@ movePiece position currentPiece model =
                         { model
                             | board = updatedBoard
                             , teamTurn = oppositeTeamTurn movingTeam
-                            , moves = model.moves ++ [ positionNotation newPiece toPosition ]
+                            , moves = model.moves ++ [ moveNotation newPiece fromPosition toPosition False ]
                         }
                     else
                         sameBoardModel
@@ -221,7 +231,7 @@ movePiece position currentPiece model =
                         { model
                             | board = updatedBoard
                             , teamTurn = oppositeTeamTurn movingTeam
-                            , moves = model.moves ++ [ positionNotation newPiece toPosition ]
+                            , moves = model.moves ++ [ moveNotation newPiece fromPosition toPosition True ]
                         }
                     else
                         sameBoardModel
@@ -323,7 +333,7 @@ pieceToLetter piece =
             "R"
 
         TeamPiece _ Knight ->
-            "K"
+            "N"
 
         TeamPiece _ Bishop ->
             "B"
@@ -335,16 +345,28 @@ pieceToLetter piece =
             "Q"
 
 
-positionNotation : TeamPiece -> ( Int, Int ) -> String
-positionNotation piece position =
+moveNotation : TeamPiece -> ( Int, Int ) -> ( Int, Int ) -> Bool -> String
+moveNotation piece fromPosition toPosition capture =
     let
-        rank =
-            toString (Tuple.first position)
+        fromRank =
+            toString (Tuple.first fromPosition)
 
-        file =
-            Tuple.second position
+        fromFile =
+            Tuple.second fromPosition
+
+        toRank =
+            toString (Tuple.first toPosition)
+
+        toFile =
+            Tuple.second toPosition
+
+        x =
+            if capture then
+                "x"
+            else
+                "-"
     in
-        (pieceToLetter piece) ++ (fileNumToLetter file) ++ rank
+        (pieceToLetter piece) ++ (fileNumToLetter fromFile) ++ fromRank ++ x ++ (fileNumToLetter toFile) ++ toRank
 
 
 newModelPayload : Model -> Push.Push msg
